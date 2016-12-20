@@ -3,8 +3,6 @@ var channel_id = 'UUExDf4hkbSU-pmJcyT_sDtg';
 var youtube_key = 'AIzaSyD8F5XTORodGF6CdIVhRLx5mWEtg8w3gPc';
 
 var uri = 'https://talk.pdis.nat.gov.tw/posts';
-//var api_key = '5345d7f5424ff8d2c1bc16ab1f115c7de218be4a8c4841f965b843d310eab1ab';
-//var api_name = 'targee';
 var api_key = '7af653838dfd6e9f1ed9b25bb447f298b5e855b48dbf22ead2abf5bd74d19576';
 var api_name = 'youtube2discourse';
 var category_id = '12';//隨意測試區
@@ -18,7 +16,7 @@ var headers = {
 
 var youTube = new YouTube();
 youTube.setKey(youtube_key);
-youTube.getChannelById('UCExDf4hkbSU-pmJcyT_sDtg', function(error, results) {
+youTube.getChannelById(channel_id, function(error, results) {
   if (error) {
     console.log(error);
   }else {
