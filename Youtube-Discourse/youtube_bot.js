@@ -1,14 +1,16 @@
 var YouTube = require('youtube-node');
-var channel_id = 'UCExDf4hkbSU-pmJcyT_sDtg';
-var youtube_key = 'AIzaSyD8F5XTORodGF6CdIVhRLx5mWEtg8w3gPc';
+var YAML = require('yamljs')
+var CHANNEL_ID = 'UCExDf4hkbSU-pmJcyT_sDtg';
+var YOUTUBE_KEY = 'AIzaSyD8F5XTORodGF6CdIVhRLx5mWEtg8w3gPc';
 
-var category_id = '12';//隨意測試區
-var post_uri = 'https://talk.pdis.nat.gov.tw/posts';
-var get_uri = 'https://talk.pdis.nat.gov.tw/c/'+category_id+'.json';
-//var api_key = '5345d7f5424ff8d2c1bc16ab1f115c7de218be4a8c4841f965b843d310eab1ab';
-//var api_name = 'targee';
-var api_key = '7af653838dfd6e9f1ed9b25bb447f298b5e855b48dbf22ead2abf5bd74d19576';
-var api_name = 'youtube2discourse';
+var CATEGORY_ID = '13';//隨意測試區
+var POST_URI = 'https://talk.pdis.nat.gov.tw/posts';
+var GET_URI = 'https://talk.pdis.nat.gov.tw/c/'+CATEGORY_ID+'.json';
+var TOPIC_URI = 'https://talk.pdis.nat.gov.tw/t/';
+var YOUTUBE_URI = "https://www.youtube.com/watch?v=";
+var TAGNAME = 'youtube';
+var API_KEY = '7af653838dfd6e9f1ed9b25bb447f298b5e855b48dbf22ead2abf5bd74d19576';
+var API_NAME = 'youtube2discourse';
 var request = require('request');
 
 //Set the headers
@@ -17,57 +19,61 @@ var headers = {
     'Content-Type': 'application/x-www-form-urlencoded'
 }
 var topic_ary = [];
+var topic_obj = [];
 var opts = {
-    url: get_uri,
+    url: GET_URI,
     method: 'GET',
     headers: headers,
     form: {
-		'api_key': api_key,
-		'api_username': api_name
+		'api_key': API_KEY,
+		'api_username': API_NAME
 	}
 }
-// Start the request
+//取得討論分類內已有的文章列表
 request(opts, function (error, response, results) {
     if (!error && response.statusCode == 200) {
 		var res = JSON.parse(results);
         //console.log(res);
 		for (var i = 0; i < res.topic_list.topics.length; i++) {
 			var title = res.topic_list.topics[i].title;
+			var id = res.topic_list.topics[i].id;
 			topic_ary.push(title.toUpperCase());
-			//console.log(title);
+			topic_obj[title.toUpperCase()] = id;
+			//console.log(res.topic_list.topics[i]);
 		}
-		console.log(topic_ary);
 		postTo();
     }else{
 		console.log('error='+error+' '+response.statusCode);
 	}
 })
+//介接與發文
 function postTo(){
+	//取得頻道內所有的影片列表
 	var youTube = new YouTube();
-	youTube.setKey(youtube_key);
-	youTube.getChannelById(channel_id, function(error, results) {
+	youTube.setKey(YOUTUBE_KEY);
+	youTube.getChannelById(CHANNEL_ID, function(error, results) {
 		if (error) {
 			console.log(error);
 		}else {
 		//console.log(JSON.stringify(results, null, 2));
+		//取得頻道內所有影片資訊
 		for(var i in results.items) {
 			var item = results.items[i];
 			var playlistId = item.contentDetails.relatedPlaylists.uploads;
-
 			for (var i = 0; i < results.items.length; i++) {
 				yt1 = new YouTube();
-				yt1.setKey(youtube_key);
+				yt1.setKey(YOUTUBE_KEY);
 				yt1.getPlayListsItemsById(playlistId, function(error, result) {
 					if (error) {
 						console.log(error);
 					}else {
 						//console.log(JSON.stringify(result, null, 2));
-						
+						//取得單一影片資訊
 						for (var j = 0; j < result.items.length; j++) {
 							var playlistItem = result.items[j];
 							var videoId = playlistItem.snippet.resourceId.videoId;
 							yt2 = new YouTube();
-							yt2.setKey(youtube_key);
+							yt2.setKey(YOUTUBE_KEY);
 							yt2.getById(videoId, function(error, result) {
 								if (error) {
 									console.log(error);
@@ -79,18 +85,19 @@ function postTo(){
 									var desc = result.items[0].snippet.description;
 									date = date.substring(0, date.indexOf('T'));
 									console.log(id+" "+date+" "+title+" "+desc);
+									//檢查影片是否已存在要介接的討論區，沒有就介接並發文
 									if(!inArray(title.toUpperCase(), topic_ary)){
 										// Configure the request
 										var options = {
-											url: post_uri,
+											url: POST_URI,
 											method: 'POST',
 											headers: headers,
 											form: {
 												'title': title,
 												'raw': setContent(id, title, desc, date),
-												'category': category_id,
-												'api_key': api_key,
-												'api_username': api_name
+												'category': CATEGORY_ID,
+												'api_key': API_KEY,
+												'api_username': API_NAME
 											}
 										}
 										// Start the request
@@ -104,7 +111,75 @@ function postTo(){
 											}
 										})
 									}else{
-										console.log('repeat: '+title);
+										//已存在文章檢查是否需要更新
+										var tid = topic_obj[title.toUpperCase()];
+										console.log('repeat: '+tid);
+										var options = {
+											url: TOPIC_URI+tid+'.json?include_raw=1',
+											method: 'GET',
+											headers: headers,
+											form: {
+												'api_key': API_KEY,
+												'api_username': API_NAME
+											}
+										}
+										// Start the request
+										request(options, function (error, response, result) {
+											console.log('get topic');
+											if (!error && response.statusCode == 200) {
+												var res = JSON.parse(result);
+												var raw = YAML.parse(res.post_stream.posts[0].raw);
+												var stream_id = res.post_stream.stream[0];
+												var hasTag = -1;	//是否有youtube標籤
+												var needUpldae = 0;	//是否需要更新
+												console.log("length="+raw.content.length);
+												for(var i=0;i<raw.content.length;i++){
+													for(var v in raw.content[i]){
+														if(v==TAGNAME) hasTag = i;
+													}
+												}
+												if(hasTag >=0){
+													if(raw.content[hasTag].youtube==undefined || raw.content[hasTag].youtube==""){
+														raw.content[hasTag].youtube = YOUTUBE_URI+id;
+														raw.date = date;
+														var yaml = obj2yaml(raw);
+														needUpldae = 1;
+													}
+												}else{
+													var tmp = {};
+													tmp[TAGNAME] = YOUTUBE_URI+id;
+													raw.content.push(tmp);
+													raw.date = date;
+													var yaml = obj2yaml(raw);
+													needUpldae = 1;
+												}
+												if(needUpldae){
+													console.log(POST_URI+'/'+stream_id);
+													var options = {
+													url: POST_URI+'/'+stream_id,
+													method: 'PUT',
+													headers: headers,
+													form: {
+														'post[raw]': yaml,
+														'api_key': API_KEY,
+														'api_username': API_NAME
+													}
+												}
+												// Start the request
+												request(options, function (error, response, body) {
+													console.log('update old');
+													if (!error && response.statusCode == 200) {
+														// Print out the response body
+														console.log(body)
+													}else{
+														console.log('error='+error+' '+response.statusCode);
+													}
+												})
+												}
+											}else{
+												console.log('error='+error+' '+response.statusCode);
+											}
+										})
 									}
 								}
 							});
@@ -117,29 +192,34 @@ function postTo(){
 	  }
 	});
 }
+//產生文章內容
 function setContent(id, title, desc, date){
-	var str = '';
-	str += "title:"+title+"<br>";
-	str += "description:"+desc+"<br>";
-	str += "date:"+date+"<br>";
-	str += "category:<br>";
-	str += "tags:<br>";
-	str += "participants:"+"<br>";
-	str += "content:";
-	str += "<ul>";
-	str += '<li>youtube:<a href="https://www.youtube.com/watch?v='+id+'">https://www.youtube.com/watch?v='+id+'</li>';
-	str += "<li>Transcript:</li>";
-	str += "<li>Soundcloud:</li>";
-	str += "<li>Slido:</li>";
-	str += "<li>Wiselike:</li>";
-	str += "</ul>";
-	return str;
+	var obj = {};
+	var obj2 = {};
+	var ary = [];
+	
+	obj["title"] = title;
+	obj["date"] = date;
+	obj2["youtube"] = YOUTUBE_URI+id;
+	ary.push(obj2);
+	obj["content"] = ary;
+	//var json = JSON.stringify(obj);
+	var yaml = obj2yaml(obj);
+	//console.log(json);
+	console.log(yaml);
+	return yaml;
 }
-
+//是否在陣列內
 function inArray(str, ary) {
     var length = ary.length;
     for(var i = 0; i < length; i++) {
         if(ary[i] == str) return true;
     }
     return false;
+}
+//物件轉yaml，刪除不要的'{}
+function obj2yaml(str){
+	var yaml = YAML.stringify(str);
+	yaml = yaml.replace(/[\'\{\}]/g, "");
+	return yaml;
 }
