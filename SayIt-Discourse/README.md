@@ -8,3 +8,5 @@ SayIt to Discourse Bot
    - change ```config.json.template``` content
    - rename ```config.json.template``` to ```config.json```
    - python SayitDiscourse.py
+   - Using Crontab running discupdater.py
+     - 0 * * * * user user /path/discupdater.py
