@@ -3,9 +3,10 @@ var YAML = require('yamljs')
 var CHANNEL_ID = 'UCExDf4hkbSU-pmJcyT_sDtg';
 var YOUTUBE_KEY = 'AIzaSyD8F5XTORodGF6CdIVhRLx5mWEtg8w3gPc';
 
-var CATEGORY_ID = '12';//隨意測試區
+var CATEGORY_ID = '13';//隨意測試區
+var CATEGORY_NAME = 'pdis-site/how-we-work-track';
 var POST_URI = 'https://talk.pdis.nat.gov.tw/posts';
-var GET_URI = 'https://talk.pdis.nat.gov.tw/c/'+CATEGORY_ID+'.json';
+var GET_URI = 'https://talk.pdis.nat.gov.tw/c/'+CATEGORY_NAME+'.json';
 var TOPIC_URI = 'https://talk.pdis.nat.gov.tw/t/';
 var YOUTUBE_URI = "https://www.youtube.com/watch?v=";
 var TAGNAME = 'youtube';
