@@ -2,6 +2,9 @@ var YouTube = require('youtube-node');
 var YAML = require('yamljs');
 var request = require('request');
 
+var JSON_PATH = '../Postgres-Discourse/';
+var JSON_NAME = 'discourse_posts';
+
 var CHANNEL_ID = 'UCExDf4hkbSU-pmJcyT_sDtg';
 var YOUTUBE_KEY = 'AIzaSyD8F5XTORodGF6CdIVhRLx5mWEtg8w3gPc';
 
@@ -23,37 +26,27 @@ var headers = {
 }
 var topic_ary = [];
 var topic_obj = [];
-var opts = {
-    url: GET_URI,
-    method: 'GET',
-    headers: headers,
-    form: {
-		'api_key': API_KEY,
-		'api_username': API_NAME
-	}
-}
+
 //取得討論分類內已有的文章列表
-request(opts, function (error, response, results) {
-    if (!error && response.statusCode == 200) {
-		var res = JSON.parse(results);
-        //console.log(res);
-		for (var i = 0; i < res.topic_list.topics.length; i++) {
-			var title = res.topic_list.topics[i].title;
-			var chk = title.lastIndexOf('-');
-			if(chk > -1){
-				title = title.substring(chk+3, title.length);
-			}
-			var id = res.topic_list.topics[i].id;
-			topic_ary.push(title.toUpperCase());
-			topic_obj[title.toUpperCase()] = id;
-			//console.log(res.topic_list.topics[i]);
+getTopic();
+function getTopic(){
+	var obj = require(JSON_PATH+JSON_NAME);
+	for(var v in obj[0].object){
+		//console.log(obj[0].object[v].topic_id);
+		//console.log(obj[0].object[v].post_id);
+		//console.log(obj[0].object[v].title);
+		var title = obj[0].object[v].title;
+		var chk = title.lastIndexOf('-');
+		if(chk > -1){
+			title = title.substring(chk+3, title.length);
 		}
-		console.log(topic_obj);
-		postTo();
-    }else{
-		console.log('error='+error+' '+response.statusCode);
+		var id = obj[0].object[v].topic_id;
+		topic_ary.push(title.toUpperCase());
+		topic_obj[title.toUpperCase()] = id;
 	}
-})
+	console.log(topic_obj);
+	postTo();
+}
 //介接與發文
 function postTo(){
 	//取得頻道內所有的影片列表
@@ -146,7 +139,7 @@ function postTo(){
 												var raw = YAML.parse(res.post_stream.posts[0].raw);
 												var stream_id = res.post_stream.stream[0];
 												var hasTag = -1;	//是否有youtube標籤
-												var needUpldae = 0;	//是否需要更新
+												var needUpdate = 0;	//是否需要更新
 												console.log("length="+raw.content.length);
 												for(var i=0;i<raw.content.length;i++){
 													for(var v in raw.content[i]){
@@ -154,11 +147,11 @@ function postTo(){
 													}
 												}
 												if(hasTag >=0){
-													if(raw.content[hasTag].youtube==undefined || raw.content[hasTag].youtube==""){
-														raw.content[hasTag].youtube = YOUTUBE_URI+id;
-														raw.date = date;
+													if(raw.content[hasTag].Youtube==undefined || raw.content[hasTag].Youtube==""){
+														raw.content[hasTag].Youtube = YOUTUBE_URI+id;
+														//raw.date = date;
 														var yaml = obj2yaml(raw);
-														needUpldae = 1;
+														needUpdate = 1;
 													}
 												}else{
 													var tmp = {};
@@ -166,9 +159,9 @@ function postTo(){
 													raw.content.push(tmp);
 													//raw.date = date;
 													var yaml = obj2yaml(raw);
-													needUpldae = 1;
+													needUpdate = 1;
 												}
-												if(needUpldae){
+												if(needUpdate){
 													console.log(POST_URI+'/'+stream_id);
 													var options = {
 													url: POST_URI+'/'+stream_id,
@@ -213,7 +206,7 @@ function setContent(id){
 	var obj2 = {};
 	var ary = [];
 	
-	obj2["youtube"] = YOUTUBE_URI+id;
+	obj2[TAGNAME] = YOUTUBE_URI+id;
 	ary.push(obj2);
 	obj["content"] = ary;
 	//var json = JSON.stringify(obj);
