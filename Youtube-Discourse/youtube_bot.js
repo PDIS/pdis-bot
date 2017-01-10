@@ -1,6 +1,7 @@
 var YouTube = require('youtube-node');
 var YAML = require('yamljs');
 var request = require('request');
+var fs = require("fs");
 var config = require('./config');
 
 //Set the headers
@@ -12,9 +13,12 @@ var topic_ary = [];
 var topic_obj = [];
 
 //取得討論分類內已有的文章列表
-getTopic();
-function getTopic(){
-	var obj = require(config.JSON_PATH+config.JSON_NAME);
+fs.readFile(config.JSON_PATH+config.JSON_NAME, 'utf8', function(err, file) {
+	if (err) {
+		console.log('File not Found');
+		return;
+	}
+	var obj = JSON.parse(file);
 	for(var v in obj[0].object){
 		//console.log(obj[0].object[v].topic_id);
 		//console.log(obj[0].object[v].post_id);
@@ -30,7 +34,7 @@ function getTopic(){
 	}
 	console.log(topic_obj);
 	postTo();
-}
+});
 //介接與發文
 function postTo(){
 	//取得頻道內所有的影片列表
