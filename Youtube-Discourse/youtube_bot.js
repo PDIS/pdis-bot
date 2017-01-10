@@ -122,6 +122,11 @@ function postTo(){
 										// Start the request
 										request(options, function (error, response, result) {
 											console.log('get topic');
+											fs.writeFile('./tmpaaa.txt','get topic',function(error){
+												if(error){ 
+													console.log('檔案寫入錯誤');
+												}
+											});
 											if (!error && response.statusCode == 200) {
 												var res = JSON.parse(result);
 												var raw = YAML.parse(res.post_stream.posts[0].raw);
