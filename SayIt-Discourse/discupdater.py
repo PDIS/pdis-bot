@@ -101,7 +101,7 @@ def discourse_create(data):
     post_details = {
         "title":  data['title'],
         "raw": yaml.safe_dump(raw, encoding='utf-8', allow_unicode=True, default_flow_style=False),
-        "category": config["discourse-category-id"]
+        "category": config["discourse-category-id"],
         "created_at": str(data['date'])+"T00:00:00.000Z +08:00"
         }    
     headers = {'content-type': 'application/x-www-form-urlencoded'}
