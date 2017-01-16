@@ -15,7 +15,7 @@ var topic_obj = [];
 //取得討論分類內已有的文章列表
 fs.readFile(config.JSON_PATH+config.JSON_NAME, 'utf8', function(err, file) {
 	if (err) {
-		console.log('File not Found');
+		//console.log('File not Found');
 		return;
 	}
 	var obj = JSON.parse(file);
@@ -32,7 +32,7 @@ fs.readFile(config.JSON_PATH+config.JSON_NAME, 'utf8', function(err, file) {
 		topic_ary.push(title.toUpperCase());
 		topic_obj[title.toUpperCase()] = id;
 	}
-	console.log(topic_obj);
+	//console.log(topic_obj);
 	postTo();
 });
 //介接與發文
@@ -42,7 +42,7 @@ function postTo(){
 	youTube.setKey(config.YOUTUBE_KEY);
 	youTube.getChannelById(config.CHANNEL_ID, function(error, results) {
 		if (error) {
-			console.log(error);
+			//console.log(error);
 		}else {
 		//console.log(JSON.stringify(results, null, 2));
 		//取得頻道內所有影片資訊
@@ -54,7 +54,7 @@ function postTo(){
 				yt1.setKey(config.YOUTUBE_KEY);
 				yt1.getPlayListsItemsById(playlistId, function(error, result) {
 					if (error) {
-						console.log(error);
+						//console.log(error);
 					}else {
 						//console.log(JSON.stringify(result, null, 2));
 						//取得單一影片資訊
@@ -65,7 +65,7 @@ function postTo(){
 							yt2.setKey(config.YOUTUBE_KEY);
 							yt2.getById(videoId, function(error, result) {
 								if (error) {
-									console.log(error);
+									//console.log(error);
 								}else {
 									//console.log(JSON.stringify(result, null, 2));
 									var id = result.items[0].id;
@@ -79,7 +79,7 @@ function postTo(){
 										date = title.substring(0, title.indexOf(' '));
 										title = title.substring(title.indexOf(' ')+1, title.length);
 									}
-									console.log(id+" "+date+" "+title);
+									//console.log(id+" "+date+" "+title);
 									//檢查影片是否已存在要介接的討論區，沒有就介接並發文
 									if(!inArray(title.toUpperCase(), topic_ary)){
 										// Configure the request
@@ -98,18 +98,18 @@ function postTo(){
 										}
 										// Start the request
 										request(options, function (error, response, body) {
-											console.log('post new '+title);
+											//console.log('post new '+title);
 											if (!error && response.statusCode == 200) {
 												// Print out the response body
-												console.log(body)
+												//console.log(body)
 											}else{
-												console.log('error='+error+' '+response.statusCode);
+												//console.log('error='+error+' '+response.statusCode);
 											}
 										})
 									}else{
 										//已存在文章檢查是否需要更新
 										var tid = topic_obj[title.toUpperCase()];
-										console.log('repeat: '+tid);
+										//console.log('repeat: '+tid);
 										var options = {
 											url: config.TOPIC_URI+tid+'.json?include_raw=1',
 											method: 'GET',
@@ -121,14 +121,14 @@ function postTo(){
 										}
 										// Start the request
 										request(options, function (error, response, result) {
-											console.log('get topic');
+											//console.log('get topic');
 											if (!error && response.statusCode == 200) {
 												var res = JSON.parse(result);
 												var raw = YAML.parse(res.post_stream.posts[0].raw);
 												var stream_id = res.post_stream.stream[0];
 												var hasTag = -1;	//是否有youtube標籤
 												var needUpdate = 0;	//是否需要更新
-												console.log("length="+raw.content.length);
+												//console.log("length="+raw.content.length);
 												for(var i=0;i<raw.content.length;i++){
 													for(var v in raw.content[i]){
 														if(v==config.TAGNAME) hasTag = i;
@@ -150,7 +150,7 @@ function postTo(){
 													needUpdate = 1;
 												}
 												if(needUpdate){
-													console.log(config.POST_URI+'/'+stream_id);
+													//console.log(config.POST_URI+'/'+stream_id);
 													var options = {
 													url: config.POST_URI+'/'+stream_id,
 													method: 'PUT',
@@ -163,17 +163,17 @@ function postTo(){
 												}
 												// Start the request
 												request(options, function (error, response, body) {
-													console.log('update old');
+													//console.log('update old');
 													if (!error && response.statusCode == 200) {
 														// Print out the response body
-														console.log(body)
+														//console.log(body)
 													}else{
-														console.log('error='+error+' '+response.statusCode);
+														//console.log('error='+error+' '+response.statusCode);
 													}
 												})
 												}
 											}else{
-												console.log('error='+error+' '+response.statusCode);
+												//console.log('error='+error+' '+response.statusCode);
 											}
 										})
 									}
@@ -200,7 +200,7 @@ function setContent(id){
 	//var json = JSON.stringify(obj);
 	var yaml = obj2yaml(obj);
 	//console.log(json);
-	console.log(yaml);
+	//console.log(yaml);
 	return yaml;
 }
 //是否在陣列內
