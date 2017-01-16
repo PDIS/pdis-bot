@@ -2,6 +2,7 @@
 import codecs
 import commands
 import json
+import re
 import requests
 import urllib2
 import yaml
@@ -14,12 +15,17 @@ with open('config.json', 'r') as f:
 def get_exist_article():
     # get data from discourse
     url = config["discourse-url"] + config["discourse-target-path"]
-    r = requests.get(url)
-    #print r.status_code, r.headers['content-type'], r.encoding, r.text 
-    topics = r.json()['topic_list']['topics']
     ret = []
-    for i in range(len(topics)):
-        ret.append({'id':topics[i]['id'], 'title':topics[i]['title'], 'datetime':topics[i]['created_at']})
+    page_num = 0
+    while 1:
+        r = requests.get(url + '?page=' + str(page_num))
+        #print r.status_code, r.headers['content-type'], r.encoding, r.text
+        topics = r.json()['topic_list']['topics']
+        if len(topics) == 0:
+            break
+        for i in range(len(topics)):
+            ret.append({'id':topics[i]['id'], 'title':topics[i]['title'], 'datetime':topics[i]['created_at']})
+        page_num = page_num + 1
     return ret
 
 def get_sayit_title():   
@@ -34,8 +40,10 @@ def get_sayit_title():
     page = etree.HTML(response.read())
     ret = []
     for txt in page.xpath(u"//li/span/a"):
-        if txt.text[:6] == '2016-1': #if txt.text[:5] == '2016-' or txt.text[:5] == '2015-':
-            ret.append({'date':txt.text[:10], 'title':txt.text[11:], 'url': config["sayit-url"] + txt.values()[0]})
+        m = re.search('(^\d{4})(\-)(0?[1-9]|1[012])(\-)(0?[1-9]|[12][0-9]|3[01])(\s)(.*)$', txt.text)
+        if bool(m):
+            if txt.text[:6] == '2016-1' or int(txt.text[:4]) > 2016:
+                ret.append({'date':''.join(m.groups()[0:5]), 'title':m.group(7), 'url': config["sayit-url"] + txt.values()[0]})
     return ret
 
 def check_title(sayit, discourse):
@@ -43,7 +51,7 @@ def check_title(sayit, discourse):
     for i in range(len(sayit)):
         discourse_id = 0
         for j in range(len(discourse)):
-            if sayit[i]['title'][:10].upper() == discourse[j]['title'][:10].upper():
+            if sayit[i]['title'][:20].upper() == discourse[j]['title'][:20].upper():
                 discourse_id = discourse[j]['id']
         #print discourse_id , sayit[i]['date'], sayit[i]['title']           
         ret.append({'date':sayit[i]['date'], 'title':sayit[i]['title'], 'url':sayit[i]['url'], 'id':discourse_id}) 
