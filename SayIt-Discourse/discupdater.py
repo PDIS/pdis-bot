@@ -37,7 +37,7 @@ def get_sayit_title():
            'Connection': 'keep-alive'}
     request = urllib2.Request(config["sayit-url"]+config["sayit-target-path"], headers=hdr)
     response = urllib2.urlopen(request)
-    page = etree.HTML(response.read())
+    page = etree.HTML(response.read(), parser=etree.HTMLParser(encoding="utf-8"))
     ret = []
     for txt in page.xpath(u"//li/span/a"):
         m = re.search('(^\d{4})(\-)(0?[1-9]|1[012])(\-)(0?[1-9]|[12][0-9]|3[01])(\s)(.*)$', txt.text)
