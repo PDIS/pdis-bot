@@ -10,3 +10,4 @@ SayIt to Discourse Bot
    - python SayitDiscourse.py
    - Using Crontab running discupdater.py
      - ```0 * * * * user user /path/discupdater.py```
+     - ```0 0 * * 0 user user cd /path && sh discupdater_log.sh```
