@@ -125,31 +125,6 @@ function postTo(){
 									//檢查影片是否已存在要介接的討論區，沒有就介接並發文
 									if(!inArray(title.toUpperCase(), topic_ary)){
 										postNew(id, title, date);
-										/*
-										var options = {
-											url: config.POST_URI,
-											method: 'POST',
-											headers: headers,
-											form: {
-												'title': title,
-												'created_at': date,
-												'raw': setContent(id),
-												'category': config.CATEGORY_ID,
-												'api_key': config.API_KEY,
-												'api_username': config.API_NAME
-											}
-										}
-										// Start the request
-										request(options, function (error, response, body) {
-											//console.log('post new '+title);
-											if (!error && response.statusCode == 200) {
-												// Print out the response body
-												//console.log(body)
-											}else{
-												//console.log('error='+error+' '+response.statusCode);
-											}
-										})
-										*/
 									}else{
 										//已存在文章檢查是否需要更新
 										var tid = topic_obj[title.toUpperCase()];
