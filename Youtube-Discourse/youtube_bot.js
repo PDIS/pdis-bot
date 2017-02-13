@@ -110,6 +110,9 @@ function postTo(){
 									console.log('getById error='+error);
 								}else {
 									//console.log(JSON.stringify(result, null, 2));
+									//是否為公開內容，不是就不介接
+									var privacyStatus = result.items[0].status.privacyStatus;
+									if(privacyStatus!='public') return;
 									var id = result.items[0].id;
 									var date = result.items[0].snippet.publishedAt;
 									var title = result.items[0].snippet.title;
@@ -171,25 +174,25 @@ function postTo(){
 												if(needUpdate){
 													//console.log(config.POST_URI+'/'+stream_id);
 													var options = {
-													url: config.POST_URI+'/'+stream_id,
-													method: 'PUT',
-													headers: headers,
-													form: {
-														'post[raw]': yaml,
-														'api_key': config.API_KEY,
-														'api_username': config.API_NAME
+														url: config.POST_URI+'/'+stream_id,
+														method: 'PUT',
+														headers: headers,
+														form: {
+															'post[raw]': yaml,
+															'api_key': config.API_KEY,
+															'api_username': config.API_NAME
+														}
 													}
-												}
-												// Start the request
-												request(options, function (error, response, body) {
-													//console.log('update old');
-													if (!error && response.statusCode == 200) {
-														// Print out the response body
-														//console.log(body)
-													}else{
-														console.log('update post error='+error+' '+response.statusCode);
-													}
-												})
+													// Start the request
+													request(options, function (error, response, body) {
+														//console.log('update old');
+														if (!error && response.statusCode == 200) {
+															// Print out the response body
+															//console.log(body)
+														}else{
+															console.log('update post error='+error+' '+response.statusCode);
+														}
+													})
 												}
 											}else{
 												console.log('get topic error='+error+' '+response.statusCode);
