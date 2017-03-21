@@ -1,5 +1,9 @@
 /.vscode/
 
 config.js
+node_modules/
+
+Wiselike-Discourse/config.js
+Wiselike-Discourse/node_modules/
 
 discourse_cronjob.sh
