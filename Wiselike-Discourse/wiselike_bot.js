@@ -21,7 +21,7 @@ function init(){
 			postNew(obj[i]);
 			var re_num = obj[i].replies.length;
 			sleep(2000*(re_num+1));
-			if(i>2) break;
+			//if(i>2) break;
 		}
 	});
 }
@@ -47,7 +47,7 @@ function postNew(obj){
 	}
 	// Start the request
 	request(options, function (error, response, body) {
-		
+
 		if (response.statusCode != 200) {
 			var body = JSON.parse(body);
 			console.log('post new error='+body.errors);
@@ -96,5 +96,5 @@ function reply(id, num, body, user, date){
 }
 //檢查並補滿標題長度
 function checkTitle(str){
-	
+
 }

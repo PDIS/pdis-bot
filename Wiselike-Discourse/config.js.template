@@ -1,0 +1,10 @@
+module.exports = {
+  JSON_PATH: './',
+  JSON_NAME: 'wiselike-2017-01-30-backup.json',
+  POST_URI: 'https://discourse/posts',
+  API_KEY: '',
+  CATEGORY_ID: 1,
+  API_NAME: 'wiselike',
+  AU_NAME: 'audreyt',
+  AU_SHOW_NAME: 'Audrey Tang'
+};
