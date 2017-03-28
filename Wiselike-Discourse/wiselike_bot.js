@@ -24,11 +24,7 @@ function init(){
 			console.log('post id='+obj[i].id);
 			postNew(obj[i]);
 			var re_num = obj[i].replies.length;
-<<<<<<< HEAD
-			sleep(2000*(re_num+1));
-=======
 			sleep(1000*(re_num));
->>>>>>> 12dcb502dc7601e30a07a26cd4f39ead217a804b
 			//if(i>2) break;
 		}
 	});
@@ -63,7 +59,7 @@ function postNew(obj){
 	}
 	// Start the request
 	request(options, function (error, response, body) {
-
+		
 		if (response.statusCode != 200) {
 			var body = JSON.parse(body);
 			console.log('post new error='+body.errors+'  '+title);
@@ -115,12 +111,4 @@ function reply(id, num, body, user, date){
 			fs.writeFile('error_reply_'+id+'_'+num+'.log', 'error_code='+response.statusCode+' '+body.errors);
 		}
 	})
-<<<<<<< HEAD
 }
-//檢查並補滿標題長度
-function checkTitle(str){
-
-}
-=======
-}
->>>>>>> 12dcb502dc7601e30a07a26cd4f39ead217a804b
