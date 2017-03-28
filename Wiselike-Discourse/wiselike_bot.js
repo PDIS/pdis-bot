@@ -17,10 +17,18 @@ function init(){
 		}
 		var obj = JSON.parse(file);
 		//console.log(obj);
+		var emp = 0;
 		for(var i=0;i<obj.length;i++){
+			emp++;
+			console.log('post number '+emp);
+			console.log('post id='+obj[i].id);
 			postNew(obj[i]);
 			var re_num = obj[i].replies.length;
+<<<<<<< HEAD
 			sleep(2000*(re_num+1));
+=======
+			sleep(1000*(re_num));
+>>>>>>> 12dcb502dc7601e30a07a26cd4f39ead217a804b
 			//if(i>2) break;
 		}
 	});
@@ -30,9 +38,17 @@ function postNew(obj){
 	var title = obj.title;
 	var body = obj.body;
 	var user = obj.usr == config.AU_SHOW_NAME ? config.AU_NAME : config.API_NAME;
-	console.log('post user='+user);
-	console.log('post ='+title.length);
-	console.log('post ='+body);
+	if(title.length > 200){
+		body = title+'\n\n'+body;
+		title = title.substring(0, 200)+'...';
+	}
+	if(body.length==0) body = '內文如標題所示。';
+	title = obj.id+'_'+title;
+	console.log('user='+user);
+	console.log('title ='+title);
+	console.log('body ='+body);
+	console.log('===============================');
+	
 	var options = {
 		url: config.POST_URI,
 		method: 'POST',
@@ -50,9 +66,10 @@ function postNew(obj){
 
 		if (response.statusCode != 200) {
 			var body = JSON.parse(body);
-			console.log('post new error='+body.errors);
+			console.log('post new error='+body.errors+'  '+title);
 			console.log('code='+response.statusCode);
-			fs.writeFile('error_'+obj.id+'.log', 'error_code='+response.statusCode+' '+body.errors);
+			console.log('----------------------------------');
+			fs.writeFile('error_'+obj.id+'.log', 'error_code='+response.statusCode+' '+body.errors+'  '+title);
 		}else{
 			console.log('post new '+title);
 			var res = JSON.parse(body);
@@ -60,11 +77,16 @@ function postNew(obj){
 			for(var j=0;j<obj.replies.length;j++){
 				var reply_user = obj.replies[j].user == config.AU_SHOW_NAME ? config.AU_NAME : config.API_NAME;
 				var reply_date = obj.replies[j].date;
+				console.log('    reply number='+j);
+				console.log('    reply user='+reply_user);
+				console.log('    reply date ='+reply_date);
+				console.log('    reply body ='+obj.replies[j].body);
 				reply(res.topic_id, j+1, obj.replies[j].body, reply_user, reply_date);
-				sleep(2000);
+				sleep(1000);
 			}
 		}
 	})
+	
 }
 //貼出新文章
 function reply(id, num, body, user, date){
@@ -88,13 +110,17 @@ function reply(id, num, body, user, date){
 		//console.log(body)
 		if (response.statusCode != 200) {
 			var body = JSON.parse(body);
-			console.log('post new error='+body.errors);
+			console.log('reply new error='+body.errors);
 			console.log('code='+response.statusCode);
 			fs.writeFile('error_reply_'+id+'_'+num+'.log', 'error_code='+response.statusCode+' '+body.errors);
 		}
 	})
+<<<<<<< HEAD
 }
 //檢查並補滿標題長度
 function checkTitle(str){
 
 }
+=======
+}
+>>>>>>> 12dcb502dc7601e30a07a26cd4f39ead217a804b
