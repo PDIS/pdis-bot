@@ -8,7 +8,7 @@ Wiselike to Discourse Bot
    - change ```config.js.template``` content
    - rename ```config.js.template``` to ```config.js```
    - node wiselike_bot.js
-   - we alse change discourse admin settings
+   - we also change discourse admin settings
      - ```min post length: 2 #謝謝```
      - ```min first post length: 5```
      - ```min topic title length: 3```
