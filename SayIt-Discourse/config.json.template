@@ -1,5 +1,5 @@
 {
-    "sayit-url":"http://sayit.archive.tw",
+    "sayit-url":"https://sayit.pdis.nat.gov.tw",
     "sayit-target-path":"/speeches",
     "sayit-days-ago": 100,
     "discourse-url":"https://talk.pdis.nat.gov.tw",
