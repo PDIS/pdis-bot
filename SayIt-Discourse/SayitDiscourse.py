@@ -72,5 +72,5 @@ for txt in page.xpath(u"//li/span/a"):
         print post_details
         time.sleep(3)
     else:
-        print '{"url":"' + 'http://sayit.archive.tw'+txt.values()[0]+'", "title":"'+txt.text + '"}'
+        print '{"url":"' + 'https://sayit.pdis.nat.gov.tw'+txt.values()[0]+'", "title":"'+txt.text + '"}'
     
