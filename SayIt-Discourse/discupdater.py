@@ -1,13 +1,18 @@
-#! /usr/bin/python
+#! /usr/local/bin/python2.7
+# -*- coding: utf8 -*
 import codecs
 import commands
 import json
 import re
-import requests
+import requests # install requests
+#import sys
 import urllib2
-import yaml
+import yaml # install pyyaml
 from datetime import datetime, timedelta
-from lxml import etree
+from lxml import etree # install lxml
+
+#reload(sys)
+#sys.setdefaultencoding('utf-8')
 
 with open('config.json', 'r') as f:
     config = json.load(f)
@@ -24,6 +29,7 @@ def get_exist_article():
         if len(topics) == 0:
             break
         for i in range(len(topics)):
+            #print 'dicourse:', topics[i]['title']
             ret.append({'id':topics[i]['id'], 'title':topics[i]['title'], 'datetime':topics[i]['created_at']})
         page_num = page_num + 1
     return ret
@@ -37,12 +43,15 @@ def get_sayit_title():
            'Connection': 'keep-alive'}
     request = urllib2.Request(config["sayit-url"]+config["sayit-target-path"], headers=hdr)
     response = urllib2.urlopen(request)
-    page = etree.HTML(response.read(), parser=etree.HTMLParser(encoding="utf-8"))
+    page = etree.HTML(response.read(), parser=etree.HTMLParser(encoding="utf-8"))   
     ret = []
     for txt in page.xpath(u"//li/span/a"):
-        m = re.search('(^\d{4})(\-)(0?[1-9]|1[012])(\-)(0?[1-9]|[12][0-9]|3[01])(\s)(.*)$', txt.text)
+        ### strip out whitespaces
+        txt_strip = txt.text.strip()
+        m = re.search('(^\d{4})(\-)(0?[1-9]|1[012])(\-)(0?[1-9]|[12][0-9]|3[01])(\s)(.*)$', txt_strip)
+        #print 'sayit:', txt_strip
         if bool(m):
-            if txt.text[:6] == '2016-1' or int(txt.text[:4]) > 2016:
+            if txt_strip[:6] == '2016-1' or int(txt_strip[:4]) > 2016:
                 ret.append({'date':''.join(m.groups()[0:5]), 'title':m.group(7), 'url': config["sayit-url"] + txt.values()[0]})
     return ret
 
@@ -62,6 +71,7 @@ def update_raw(list_data):
         if list_data[i]['id'] == 0:
             discourse_create(list_data[i])
         elif list_data[i]['id'] != 0:  
+            #print str(list_data[i]['id'])
             r = requests.get(config["discourse-url"] + '/t/topic/'+ str(list_data[i]['id']) +'.json')
             real_id = str(r.json()['post_stream']['posts'][0]['id'])
             list_data[i]['id'] = real_id
@@ -126,6 +136,7 @@ def log(msg):
 if __name__ == '__main__':
     log('===== ACTION =====')
     list_sayit = get_sayit_title()
+    # print(json.dumps(list_sayit, indent=4, sort_keys=True))
     list_discourse = get_exist_article()
     list_for_update = check_title(list_sayit, list_discourse)
     update_raw(list_for_update)
