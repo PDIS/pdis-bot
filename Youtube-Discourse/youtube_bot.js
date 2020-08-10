@@ -4,11 +4,6 @@ var request = require('request');
 var fs = require("fs");
 var config = require('./config');
 
-//Set the headers
-var headers = {
-    'User-Agent': 'Super Agent/0.0.1',
-    'Content-Type': 'application/x-www-form-urlencoded'
-}
 var topic_ary = [];
 var topic_obj = [];
 var page = 0;
@@ -16,16 +11,19 @@ var length = 0;
 //取得討論分類內已有的文章列表
 getTopic();
 function getTopic(){
+	var headers = {
+		'User-Agent': 'Super Agent/0.0.1',
+		'Content-Type': 'application/x-www-form-urlencoded',
+		'api_key': config.API_KEY,
+		'api_username': config.API_NAME
+	}
 	var opts = {
 		url: config.GET_URI+page,
 		method: 'GET',
 		headers: headers,
-		form: {
-			'api_key': config.API_KEY,
-			'api_username': config.API_NAME
-		}
 	}
 	request(opts, function (error, response, results) {
+			console.log('gg='+JSON.stringify(opts));
 		if (!error && response.statusCode == 200) {
 			var res = JSON.parse(results);
 			length = res.topic_list.topics.length;
@@ -102,6 +100,7 @@ function postTo(){
 						//取得單一影片資訊
 						for (var j = 0; j < result.items.length; j++) {
 							var playlistItem = result.items[j];
+							console.log(playlistItem)
 							var videoId = playlistItem.snippet.resourceId.videoId;
 							yt2 = new YouTube();
 							yt2.setKey(config.YOUTUBE_KEY);
@@ -122,24 +121,27 @@ function postTo(){
 									//檢查標題是否含有日期，有就取用標題日期
 									if(chk > -1){
 										date = title.substring(0, title.indexOf(' '));
-										title = title.substring(title.indexOf(' ')+1, title.length);
+										title = title.replace(/^\S+\s+/, '');
 									}
-									//console.log(id+" "+date+" "+title);
+
+									console.log(id+" "+date+" "+title);
 									//檢查影片是否已存在要介接的討論區，沒有就介接並發文
 									if(!inArray(title.toUpperCase(), topic_ary)){
 										postNew(id, title, date);
 									}else{
 										//已存在文章檢查是否需要更新
 										var tid = topic_obj[title.toUpperCase()];
-										//console.log('repeat: '+tid);
+									//	console.log('repeat: '+tid);
+										var headers = {
+										        'User-Agent': 'Super Agent/0.0.1',
+											'Content-Type': 'application/x-www-form-urlencoded',
+											'api_key': config.API_KEY,
+											'api_username': config.API_NAME
+												}
 										var options = {
 											url: config.TOPIC_URI+tid+'.json?include_raw=1',
 											method: 'GET',
 											headers: headers,
-											form: {
-												'api_key': config.API_KEY,
-												'api_username': config.API_NAME
-											}
 										}
 										// Start the request
 										request(options, function (error, response, result) {
@@ -173,15 +175,17 @@ function postTo(){
 												}
 												if(needUpdate){
 													//console.log(config.POST_URI+'/'+stream_id);
+													var headers = {
+													                'User-Agent': 'Super Agent/0.0.1',
+													                'Content-Type': 'application/x-www-form-urlencoded',
+													                'api_key': config.API_KEY,
+													                'api_username': config.API_NAME,
+															'post[raw]': yaml
+														        }
 													var options = {
 														url: config.POST_URI+'/'+stream_id,
 														method: 'PUT',
 														headers: headers,
-														form: {
-															'post[raw]': yaml,
-															'api_key': config.API_KEY,
-															'api_username': config.API_NAME
-														}
 													}
 													// Start the request
 													request(options, function (error, response, body) {
@@ -213,23 +217,26 @@ function postTo(){
 //貼出新文章
 function postNew(id, title, date){
 	//console.log('post new');
+	var headers = {
+	                'User-Agent': 'Super Agent/0.0.1',
+		        'Content-Type': 'application/x-www-form-urlencoded',
+	                'Api-key': config.API_KEY,
+	                'Api-username': config.API_NAME,
+		        }
 	var options = {
 		url: config.POST_URI,
 		method: 'POST',
 		headers: headers,
 		form: {
-			'title': title,
-			'created_at': date,
-			'raw': setContent(id),
-			'category': config.CATEGORY_ID,
-			'api_key': config.API_KEY,
-			'api_username': config.API_NAME
+		        'title': title,
+		        'created_at': date,
+		        'raw': setContent(id),
+		        'category': config.CATEGORY_ID,
 		}
 	}
-	// Start the request
 	request(options, function (error, response, body) {
-		//console.log('post new '+title);
-		//console.log(body)
+		console.log('post new '+title);
+		console.log(body)
 		if (error && response.statusCode != 200) {
 			console.log('post new error='+error+' '+response.statusCode);
 		}
