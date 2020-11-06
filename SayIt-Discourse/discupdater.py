@@ -4,12 +4,15 @@ import codecs
 import commands
 import json
 import re
-import requests
+import requests # install requests
 import urllib2
-import yaml
+import yaml # install pyyaml
 from datetime import datetime, timedelta
-from lxml import etree
+from lxml import etree # install lxml
+import time
+import requests.packages.urllib3
 
+requests.packages.urllib3.disable_warnings()
 ### configure your env with `set PYTHONIOENCODING=UTF-8` or use below
 #import sys
 #reload(sys)
@@ -33,6 +36,7 @@ def get_exist_article():
             #print 'dicourse:', topics[i]['title']
             ret.append({'id':topics[i]['id'], 'title':topics[i]['title'], 'datetime':topics[i]['created_at']})
         page_num = page_num + 1
+        time.sleep(1)
     return ret
 
 def get_sayit_title():
@@ -42,15 +46,15 @@ def get_sayit_title():
            'Accept-Encoding': 'none',
            'Accept-Language': 'en-US,en;q=0.8',
            'Connection': 'keep-alive'}
-    request = urllib2.Request(config["sayit-url"]+config["sayit-target-path"], headers=hdr)
+    request = urllib2.Request(config["sayit-url"] + config["sayit-target-path"], headers=hdr)
     response = urllib2.urlopen(request)
     page = etree.HTML(response.read(), parser=etree.HTMLParser(encoding="utf-8"))
     ret = []
     for txt in page.xpath(u"//li/span/a"):
         ### strip out whitespaces
         txt_strip = txt.text.strip()
-        print(txt_strip)
         m = re.search('(^\d{4})(\-)(0?[1-9]|1[012])(\-)(0?[1-9]|[12][0-9]|3[01])(\s)(.*)$', txt_strip)
+        #print 'sayit:', txt_strip
         if bool(m):
             if txt_strip[:6] == '2016-1' or int(txt_strip[:4]) > 2016:
                 ret.append({'date':''.join(m.groups()[0:5]), 'title':m.group(7), 'url': config["sayit-url"] + txt.values()[0]})
@@ -61,9 +65,9 @@ def check_title(sayit, discourse):
     for i in range(len(sayit)):
         discourse_id = 0
         for j in range(len(discourse)):
-            if sayit[i]['title'][:20].upper() == discourse[j]['title'][:20].upper():
+            if sayit[i]['title'].upper() == discourse[j]['title'].upper():
                 discourse_id = discourse[j]['id']
-        #print discourse_id , sayit[i]['date'], sayit[i]['title']
+        #print discourse_id, sayit[i]['date'], sayit[i]['title']
         ret.append({'date':sayit[i]['date'], 'title':sayit[i]['title'], 'url':sayit[i]['url'], 'id':discourse_id})
     return ret
 
@@ -73,11 +77,11 @@ def update_raw(list_data):
             discourse_create(list_data[i])
         elif list_data[i]['id'] != 0:
             #print str(list_data[i]['id'])
-            r = requests.get(config["discourse-url"] + '/t/topic/'+ str(list_data[i]['id']) +'.json')
+            r = requests.get(config["discourse-url"] + '/t/topic/' + str(list_data[i]['id']) + '.json')
             real_id = str(r.json()['post_stream']['posts'][0]['id'])
             list_data[i]['id'] = real_id
             r = requests.get(config["discourse-url"] + '/posts/' + real_id + '.json')
-            yaml_raw = yaml.load(r.json()['raw'])
+            yaml_raw = yaml.load(r.json()['raw'], Loader=yaml.FullLoader)
             if 'content' in yaml_raw.keys():
                 yaml_content = yaml_raw['content']
                 has_transcript = 0
@@ -100,12 +104,14 @@ def update_raw(list_data):
                 discourse_update(list_data[i])
 
 def discourse_update(data):
-    #print 'discourse_update' , data['id'], data['title'], data['raw']
+    #print 'discourse_update', data['id'], data['title'], data['raw']
     post_details = {'post[raw]': yaml.safe_dump(data['raw'], encoding='utf-8', allow_unicode=True, default_flow_style=False),}
-    headers = {'content-type': 'application/x-www-form-urlencoded'}
-    url = config["discourse-url"] + '/posts/'+data['id']+'?api_key='+config["discourse-api-key"]+'&api_username='+config["discourse-api-username"]
+    ##headers = {'content-type': 'application/x-www-form-urlencoded'}
+    headers = {'Content-Type': 'multipart/form-data', 'Api-Key': config["discourse-api-key"], 'Api-Username': config["discourse-api-username"]}
+    ##url = config["discourse-url"] + '/posts/' + data['id'] + '?api_key=' + config["discourse-api-key"] + '&api_username=' + config["discourse-api-username"]
+    url = config["discourse-url"] + '/posts/' + data['id'] + '.json'
     resp = requests.put(url, data=post_details, headers=headers)
-    log('discourse_update: ' + str(resp.status_code)+', '+str(data['id']))#+', '+str(data['title']))
+    log('discourse_update: ' + str(resp.status_code) + ', ' + str(data['id'])) # + ', ' + str(data['title']))
     return 0
 
 def discourse_create(data):
@@ -114,19 +120,23 @@ def discourse_create(data):
     if posttime < deadline :
         #print 'out of deadline'
         return 0
-    #print 'discourse_create', data['id'], data['title'], data['date']# data['url'],
+    #print 'discourse_create', data['id'], data['title'], data['date'] # data['url'],
     raw = {}
     raw['content'] = [ {"Transcript":data['url']} ]
     post_details = {
         "title":  data['title'],
         "raw": yaml.safe_dump(raw, encoding='utf-8', allow_unicode=True, default_flow_style=False),
         "category": config["discourse-category-id"],
-        "created_at": str(data['date'])+"T00:00:00.000Z +08:00"
+        "created_at": str(data['date']) + "T00:00:00.000Z +08:00"
         }
-    headers = {'content-type': 'application/x-www-form-urlencoded'}
-    url = config["discourse-url"] + '/posts?api_key='+config["discourse-api-key"]+'&api_username='+config["discourse-api-username"]
+    ##headers = {'content-type': 'application/x-www-form-urlencoded'}
+    headers = {'Content-Type': 'multipart/form-data', 'Api-Key': config["discourse-api-key"], 'Api-Username': config["discourse-api-username"]}
+    ##url = config["discourse-url"] + '/posts?api_key=' + config["discourse-api-key"] + '&api_username=' + config["discourse-api-username"]
+    url = config["discourse-url"] + '/posts.json'
     resp = requests.post(url, data=post_details, allow_redirects=True, verify=False, headers=headers)
-    log('discourse_create: ' + str(resp.status_code)+', '+str(data['date']))#+', '+str(data['title']))
+    log('discourse_create: ' + str(resp.status_code) + ', ' + str(data['date'])) # + ', ' + str(data['title']))
+    #if resp.status_code != 200:
+    #    print resp.content.decode()
     return 0
 
 def log(msg):
@@ -137,7 +147,7 @@ def log(msg):
 if __name__ == '__main__':
     log('===== ACTION =====')
     list_sayit = get_sayit_title()
-    # print(json.dumps(list_sayit))
+    # print(json.dumps(list_sayit, indent=4, sort_keys=True))
     list_discourse = get_exist_article()
     list_for_update = check_title(list_sayit, list_discourse)
     update_raw(list_for_update)
