@@ -72,7 +72,13 @@ def check_title(sayit, discourse):
     return ret
 
 def update_raw(list_data):
+    deadline = datetime.now().date() - timedelta(days=config["sayit-days-ago"])
     for i in range(len(list_data)):
+        posttime = datetime.strptime(list_data[i]['date'],"%Y-%m-%d").date()
+        if posttime < deadline:
+            #print 'out of deadline'
+            continue
+
         if list_data[i]['id'] == 0:
             discourse_create(list_data[i])
         elif list_data[i]['id'] != 0:
@@ -115,11 +121,6 @@ def discourse_update(data):
     return 0
 
 def discourse_create(data):
-    deadline = datetime.now().date() - timedelta(days=config["sayit-days-ago"])
-    posttime = datetime.strptime(data['date'],"%Y-%m-%d").date()
-    if posttime < deadline :
-        #print 'out of deadline'
-        return 0
     #print 'discourse_create', data['id'], data['title'], data['date'] # data['url'],
     raw = {}
     raw['content'] = [ {"Transcript":data['url']} ]
